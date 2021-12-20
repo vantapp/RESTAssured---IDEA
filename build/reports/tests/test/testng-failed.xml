@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite parallel="tests" name="Failed suite [Gradle suite]" verbose="0">
+  <test thread-count="5" parallel="tests" name="Gradle test(failed)" verbose="0">
+    <classes>
+      <class name="Task">
+        <methods>
+          <include name="setupRestAssured"/>
+          <include name="listTaskAfterDelete"/>
+        </methods>
+      </class> <!-- Task -->
+    </classes>
+  </test> <!-- Gradle test(failed) -->
+</suite> <!-- Failed suite [Gradle suite] -->
