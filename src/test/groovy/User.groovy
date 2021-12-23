@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.restassured.response.Response
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -5,13 +6,17 @@ import static io.restassured.RestAssured.*
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath
 
 
-class User extends Base {
+class User extends BaseUser {
     //1
     @Test
     void registerExistingEmail() {
 
         File existingEmailFile = new File(getClass().getResource("/user/existingEmail.json").toURI())
 
+        Map<String,Object> result =
+                new ObjectMapper().readValue(new File("src/test/resources/user/existingEmail.json"), HashMap.class);
+
+        String email = result.get("email");
 
         Response existingEmailResponse =
                 given()
@@ -20,8 +25,9 @@ class User extends Base {
                         .post("/register");
 
         String error = existingEmailResponse.getBody().asString()
+
         Assert.assertEquals(existingEmailResponse.getStatusCode(), 400)
-        Assert.assertTrue(error.contains("E11000 duplicate key error collection: todo-list.users index: email_1 dup key"))
+        Assert.assertEquals(error,"\"E11000 duplicate key error collection: todo-list.users index: email_1 dup key: { email: \\\""+email+"\\\" }\"")
     }
     //2
     @Test
@@ -36,20 +42,35 @@ class User extends Base {
 
         String error = incorrectEmailResponse.getBody().asString()
         Assert.assertEquals(incorrectEmailResponse.getStatusCode(), 400)
-        Assert.assertTrue(error.contains("User validation failed: email: Email is invalid"))
+        Assert.assertEquals(error,"\"User validation failed: email: Email is invalid\"")
     }
     //3
     @Test
     void registerNewUser() {
         File registerNewUserFile = new File(getClass().getResource("/user/newUser.json").toURI())
+        Map<String,Object> result =
+                new ObjectMapper().readValue(new File("src/test/resources/user/newUser.json"), HashMap.class);
+
+        String age = result.get("age");
+        String name = result.get("name");
+        String email = result.get("email")
+        String emailLowerCase = email.toLowerCase()
 
         Response registerNewUserResponse =
                 given()
                         .body(registerNewUserFile)
                         .when()
                         .post("/register");
+
+        String ageResponse = registerNewUserResponse.jsonPath().getString("user.age")
+        String nameResponse = registerNewUserResponse.jsonPath().getString("user.name")
+        String emailResponse =registerNewUserResponse.jsonPath().getString("user.email")
+
         Assert.assertEquals(registerNewUserResponse.getStatusCode(), 201)
         registerNewUserResponse.then().assertThat().body(matchesJsonSchemaInClasspath("user/UserSchema.json"))
+        Assert.assertEquals(ageResponse, age)
+        Assert.assertEquals(nameResponse, name)
+        Assert.assertEquals(emailResponse, emailLowerCase)
     }
     //4
     @Test
@@ -63,8 +84,10 @@ class User extends Base {
                         .post("/login");
 
         String error = emptyEmailResponse.getBody().asString()
+
         Assert.assertEquals(emptyEmailResponse.getStatusCode(), 400)
-        Assert.assertTrue(error.contains("Unable to login"))
+        Assert.assertEquals(error, "\"Unable to login\"")
+
     }
     //5
     @Test
@@ -79,12 +102,18 @@ class User extends Base {
 
         String error = emptyPasswordResponse.getBody().asString()
         Assert.assertEquals(emptyPasswordResponse.getStatusCode(), 400)
-        Assert.assertTrue(error.contains("Unable to login"))
+        Assert.assertEquals(error, "\"Unable to login\"")
     }
     //6
     @Test
     void credentialNewUser() {
         File credentialNewUserFile = new File(getClass().getResource("/user/credentialNewUser.json").toURI())
+
+        Map<String,Object> result =
+                new ObjectMapper().readValue(new File("src/test/resources/user/credentialNewUser.json"), HashMap.class);
+
+        String email = result.get("email");
+        String emailLowerCase = email.toLowerCase()
 
         Response credentialNewUserResponse =
                 given()
@@ -92,18 +121,16 @@ class User extends Base {
                         .when()
                         .post("/login");
 
+        String emailResponse = credentialNewUserResponse.jsonPath().getString("user.email")
+
         Assert.assertEquals(credentialNewUserResponse.getStatusCode(), 200)
         credentialNewUserResponse.then().assertThat().body(matchesJsonSchemaInClasspath("user/UserSchema.json"))
+        Assert.assertEquals(emailResponse,emailLowerCase)
+
     }
     //7
     @Test
     void logoutWithoutToken() {
-        File credentialNewUserFile = new File(getClass().getResource("/user/credentialNewUser.json").toURI())
-
-                given()
-                        .body(credentialNewUserFile)
-                        .when()
-                        .post("/login");
 
         Response logoutResponse =
                 given()
@@ -171,6 +198,13 @@ class User extends Base {
     @Test
     void getUser() {
         File credentialNewUserFile = new File(getClass().getResource("/user/credentialNewUser.json").toURI())
+        Map<String,Object> result =
+                new ObjectMapper().readValue(new File("src/test/resources/user/newUser.json"), HashMap.class);
+
+        String age = result.get("age")
+        String name = result.get("name")
+        String email = result.get("email")
+        String emailLowerCase = email.toLowerCase()
 
         Response credentialNewUserResponse =
                 given()
@@ -186,12 +220,14 @@ class User extends Base {
                         .when()
                         .get("/me")
 
-        String name= getUserResponse.jsonPath().getString("name")
-        String age= getUserResponse.jsonPath().getString("age")
+        String nameResponse= getUserResponse.jsonPath().getString("name")
+        String ageResponse = getUserResponse.jsonPath().getString("age")
+        String emailResponse = getUserResponse.jsonPath().getString("email")
 
         Assert.assertEquals(getUserResponse.getStatusCode(),200)
-        Assert.assertEquals(name,"Antony")
-        Assert.assertEquals(age,"20")
+        Assert.assertEquals(nameResponse,name)
+        Assert.assertEquals(ageResponse,age)
+        Assert.assertEquals(emailResponse,emailLowerCase)
     }
     //11
     @Test
@@ -235,7 +271,7 @@ class User extends Base {
 
         String newAge = "25"
         String newName = "Juan"
-        Response updateOneDataResponse =
+        Response updateSomeDataResponse =
                 given()
                         .header("Authorization", "Bearer "+token)
                         .header("Content-Type", "application/json")
@@ -243,10 +279,10 @@ class User extends Base {
                         .when()
                         .put("/me")
 
-        String updatedAge= updateOneDataResponse.jsonPath().getString("data.age")
-        String updatedName= updateOneDataResponse.jsonPath().getString("data.name")
+        String updatedAge= updateSomeDataResponse.jsonPath().getString("data.age")
+        String updatedName= updateSomeDataResponse.jsonPath().getString("data.name")
 
-        Assert.assertEquals(updateOneDataResponse.getStatusCode(),200)
+        Assert.assertEquals(updateSomeDataResponse.getStatusCode(),200)
         Assert.assertEquals(updatedAge,newAge)
         Assert.assertEquals(updatedName,newName)
     }

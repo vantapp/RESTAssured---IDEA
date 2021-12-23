@@ -3,7 +3,7 @@ import org.testng.Assert
 import org.testng.annotations.Test
 import static io.restassured.RestAssured.*
 
-class Task extends Base2{
+class Task extends BaseTask{
     //14
     @Test
     void newTaskWithoutDescription() {
@@ -27,8 +27,10 @@ class Task extends Base2{
                         .post("/task");
 
         String error = newTaskResponse.getBody().asString()
-        Assert.assertEquals(error,"\"Task validation failed: description: Path `description` is required.\"")
+
         Assert.assertEquals(newTaskResponse.getStatusCode(),400)
+        Assert.assertEquals(error,"\"Task validation failed: description: Path `description` is required.\"")
+
 
     }
     //15
@@ -99,7 +101,7 @@ class Task extends Base2{
 
         String token = credentialNewUserResponse.jsonPath().getString("token")
 
-        String id = "61bfbbb1f244910017889bab"
+        String idTask = "61bfbbb1f244910017889bab"
 
         File updateTasksFile = new File(getClass().getResource("/task/completedTask.json").toURI())
         Response updateTasksResponse =
@@ -108,7 +110,7 @@ class Task extends Base2{
                         .header("Content-Type","application/json")
                         .body(updateTasksFile)
                         .when()
-                        .put("/task/"+id);
+                        .put("/task/"+idTask);
 
         String completed = updateTasksResponse.jsonPath().getString("data.completed")
         Assert.assertEquals(updateTasksResponse.getStatusCode(),200)
@@ -149,14 +151,14 @@ class Task extends Base2{
     void deleteTask() {
 
         String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTZjMTQ0ZmFmOTA4NzAwMTdjZTU3YjUiLCJpYXQiOjE2NDAwMTMzNDl9.oCmADqIU8TdaVd2a4iWwanj0zdhBmefpkiQ9EugDR80"
-        String id = "619b1e76234bbd0017d92dca"
+        String idTask = "619b1e76234bbd0017d92dca"
 
         Response deleteTaskResponse =
                 given()
                         .header("Authorization", "Bearer "+token)
                         .header("Content-Type","application/json")
                         .when()
-                        .delete("/task/"+id);
+                        .delete("/task/"+idTask);
 
         String success = deleteTaskResponse.jsonPath().getString("success")
         Assert.assertEquals(deleteTaskResponse.getStatusCode(),200)
@@ -167,14 +169,14 @@ class Task extends Base2{
     void listTaskAfterDelete() {
 
         String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTZjMTQ0ZmFmOTA4NzAwMTdjZTU3YjUiLCJpYXQiOjE2NDAwMTMzNDl9.oCmADqIU8TdaVd2a4iWwanj0zdhBmefpkiQ9EugDR80"
-        String id = "619b2635234bbd0017d92ddf"
+        String idTask = "619b2635234bbd0017d92ddf"
 
         Response deleteTaskResponse =
                 given()
                         .header("Authorization", "Bearer "+token)
                         .header("Content-Type","application/json")
                         .when()
-                        .delete("/task/"+id);
+                        .delete("/task/"+idTask);
 
         Response listTasksResponse =
                 given()
@@ -184,7 +186,7 @@ class Task extends Base2{
                         .get("/task");
 
         ArrayList<String> ids = listTasksResponse.jsonPath().get("data.id")
-        boolean exist = ids.contains(id)
+        boolean exist = ids.contains(idTask)
 
         Assert.assertEquals(deleteTaskResponse.getStatusCode(),200)
         Assert.assertEquals(listTasksResponse.getStatusCode(),200)

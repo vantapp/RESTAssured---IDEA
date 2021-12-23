@@ -3,12 +3,12 @@
 <suite parallel="tests" name="Failed suite [Gradle suite]" verbose="0">
   <test thread-count="5" parallel="tests" name="Gradle test(failed)" verbose="0">
     <classes>
-      <class name="Task">
+      <class name="User">
         <methods>
           <include name="setupRestAssured"/>
-          <include name="listTaskAfterDelete"/>
+          <include name="credentialNewUser"/>
         </methods>
-      </class> <!-- Task -->
+      </class> <!-- User -->
     </classes>
   </test> <!-- Gradle test(failed) -->
 </suite> <!-- Failed suite [Gradle suite] -->

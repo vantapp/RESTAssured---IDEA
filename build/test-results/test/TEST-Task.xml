@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Task" tests="1" skipped="0" failures="0" errors="0" timestamp="2021-12-20T15:42:36" hostname="DESKTOP-3SEKVIJ" time="6.084">
-  <properties/>
-  <testcase name="listTaskAfterDelete" classname="Task" time="6.084"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
